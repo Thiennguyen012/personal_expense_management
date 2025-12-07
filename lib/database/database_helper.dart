@@ -17,7 +17,7 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'qlnv.db');
+    String path = join(await getDatabasesPath(), 'expense_management.db');
     return await openDatabase(
       path,
       version: 1,

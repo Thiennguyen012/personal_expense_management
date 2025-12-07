@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'database/database_helper.dart';
+import 'screens/login_screen.dart';
+import 'screens/signup_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/add_transaction_screen.dart';
 import 'screens/report_screen.dart';
@@ -7,7 +11,14 @@ import 'screens/transaction_list_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Khởi tạo sqflite FFI cho Desktop
+  sqfliteFfiInit();
+  databaseFactory = databaseFactoryFfi;
+
   await initializeDateFormatting('vi_VN', null);
+  // Khởi tạo database trước khi chạy app
+  await DatabaseHelper().database;
   runApp(const MyApp());
 }
 
@@ -17,14 +28,31 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Quản Lý Tài Chính',
+      title: 'Personal Expense Management',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         useMaterial3: true,
       ),
-      home: const MainScreen(),
+      home: const AuthScreen(),
       debugShowCheckedModeBanner: false,
+      routes: {
+        '/login': (context) => const LoginScreen(),
+        '/signup': (context) => const SignUpScreen(),
+        '/home': (context) => const MainScreen(),
+      },
     );
+  }
+}
+
+// Auth screen to check login state
+class AuthScreen extends StatelessWidget {
+  const AuthScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    // Check if user is logged in (for now, always show login)
+    // In real app, you would check SharedPreferences or secure storage
+    return const LoginScreen();
   }
 }
 
@@ -44,6 +72,18 @@ class _MainScreenState extends State<MainScreen> {
     ReportScreen(),
   ];
 
+  static const List<String> _titles = [
+    'Home',
+    'Transactions',
+    'Reports',
+  ];
+
+  static const List<IconData> _icons = [
+    Icons.home,
+    Icons.list,
+    Icons.assessment,
+  ];
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -52,34 +92,242 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _screens,
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
+    if (isMobile) {
+      // Mobile layout with bottom navigation
+      return Scaffold(
+        body: IndexedStack(
+          index: _selectedIndex,
+          children: _screens,
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Trang Chủ',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.list),
+              label: 'Giao Dịch',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.assessment),
+              label: 'Báo Cáo',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: Colors.blue.shade700,
+          onTap: _onItemTapped,
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: _showAddTransactionModal,
+          backgroundColor: Colors.blue.shade700,
+          child: const Icon(Icons.add),
+        ),
+      );
+    } else {
+      // Desktop layout with sidebar
+      return Scaffold(
+        body: Row(
+          children: [
+            // Sidebar
+            Container(
+              width: 250,
+              color: Colors.blue.shade50,
+              child: Column(
+                children: [
+                  // Logo/Header
+                  Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.blue.shade400,
+                                Colors.blue.shade700
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.wallet,
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'PEM',
+                          style: TextStyle(
+                            color: Colors.black87,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Personal Expense',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Divider(color: Colors.grey.shade300, height: 1),
+                  // Navigation Items
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: _titles.length,
+                      itemBuilder: (context, index) {
+                        final isSelected = _selectedIndex == index;
+                        return _buildSidebarItem(
+                          icon: _icons[index],
+                          label: _titles[index],
+                          isSelected: isSelected,
+                          onTap: () => _onItemTapped(index),
+                        );
+                      },
+                    ),
+                  ),
+                  // Divider before button
+                  Divider(color: Colors.grey.shade300, height: 1),
+                  // Add Button at bottom
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: _showAddTransactionModal,
+                            icon: const Icon(Icons.add),
+                            label: const Text('Add Transaction'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue.shade700,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: _handleLogout,
+                            icon: const Icon(Icons.logout),
+                            label: const Text('Logout'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.red.shade700,
+                              side: BorderSide(color: Colors.red.shade700),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Main Content
+            Expanded(
+              child: Column(
+                children: [
+                  // Top Bar
+                  Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 16,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _titles[_selectedIndex],
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.search),
+                              onPressed: () {},
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.notifications),
+                              onPressed: () {},
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.account_circle),
+                              onPressed: () {},
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  // Screen Content
+                  Expanded(
+                    child: IndexedStack(
+                      index: _selectedIndex,
+                      children: _screens,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  Widget _buildSidebarItem({
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: isSelected ? Colors.blue.shade100 : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Trang Chủ',
+      child: ListTile(
+        leading: Icon(
+          icon,
+          color: isSelected ? Colors.blue.shade700 : Colors.grey.shade600,
+        ),
+        title: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.blue.shade700 : Colors.grey.shade700,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list),
-            label: 'Giao Dịch',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.assessment),
-            label: 'Báo Cáo',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.blue.shade700,
-        onTap: _onItemTapped,
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddTransactionModal,
-        backgroundColor: Colors.blue.shade700,
-        child: const Icon(Icons.add),
+        ),
+        onTap: onTap,
+        hoverColor: Colors.blue.shade200.withOpacity(0.5),
       ),
     );
   }
@@ -97,5 +345,31 @@ class _MainScreenState extends State<MainScreen> {
         });
       }
     });
+  }
+
+  void _handleLogout() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushReplacementNamed(context, '/login');
+            },
+            child: Text(
+              'Logout',
+              style: TextStyle(color: Colors.red.shade700),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
