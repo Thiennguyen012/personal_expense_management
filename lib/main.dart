@@ -294,7 +294,7 @@ class _MainScreenState extends State<MainScreen> {
                                     children: const [
                                       Icon(Icons.settings),
                                       SizedBox(width: 12),
-                                      Text('Cài Đặt Tài Khoản'),
+                                      Text('Account Settings'),
                                     ],
                                   ),
                                   onTap: () {
@@ -313,7 +313,7 @@ class _MainScreenState extends State<MainScreen> {
                                       Icon(Icons.logout, color: Colors.red),
                                       SizedBox(width: 12),
                                       Text(
-                                        'Đăng Xuất',
+                                        'Log Out',
                                         style: TextStyle(color: Colors.red),
                                       ),
                                     ],

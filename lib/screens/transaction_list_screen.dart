@@ -16,12 +16,37 @@ class TransactionListScreen extends StatefulWidget {
 class _TransactionListScreenState extends State<TransactionListScreen> {
   final TransactionRepository _transactionRepository = TransactionRepository();
   String _selectedFilter = 'all';
+  String _selectedSort =
+      'date_newest'; // date_newest, date_oldest, amount_asc, name_asc
   int _refreshKey = 0;
 
   void _refresh() {
     setState(() {
       _refreshKey++;
     });
+  }
+
+  List<TransactionModel> _sortTransactions(
+      List<TransactionModel> transactions) {
+    final sorted = List<TransactionModel>.from(transactions);
+
+    switch (_selectedSort) {
+      case 'name_asc':
+        sorted.sort((a, b) => a.title.compareTo(b.title));
+        break;
+      case 'amount_asc':
+        sorted.sort((a, b) => a.amount.compareTo(b.amount));
+        break;
+      case 'date_oldest':
+        sorted.sort((a, b) => a.date.compareTo(b.date));
+        break;
+      case 'date_newest':
+      default:
+        sorted.sort((a, b) => b.date.compareTo(a.date));
+        break;
+    }
+
+    return sorted;
   }
 
   @override
@@ -33,17 +58,64 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
       // ),
       body: Column(
         children: [
-          // Filter Buttons
+          // Filter Buttons (Type)
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Row(
                 children: [
-                  _buildFilterChip('all', 'Tất Cả'),
-                  _buildFilterChip('income', 'Thu Nhập'),
-                  _buildFilterChip('expense', 'Chi Tiêu'),
+                  _buildFilterChip('all', 'All'),
+                  _buildFilterChip('income', 'Income'),
+                  _buildFilterChip('expense', 'Expense'),
                 ],
+              ),
+            ),
+          ),
+
+          // Sort Dropdown
+          Align(
+            alignment: Alignment.centerRight,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 4.0, bottom: 4.0, right: 20.0),
+              child: SizedBox(
+                width: 150,
+                child: DropdownButton<String>(
+                  value: _selectedSort,
+                  isExpanded: true,
+                  underline: Container(
+                    height: 1,
+                    color: Colors.grey.shade300,
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'date_newest',
+                      child: Text('Ngày tạo (Mới nhất)',
+                          style: TextStyle(fontSize: 12)),
+                    ),
+                    DropdownMenuItem(
+                      value: 'date_oldest',
+                      child: Text('Ngày tạo (Cũ nhất)',
+                          style: TextStyle(fontSize: 12)),
+                    ),
+                    DropdownMenuItem(
+                      value: 'name_asc',
+                      child: Text('Tên (A-Z)', style: TextStyle(fontSize: 12)),
+                    ),
+                    DropdownMenuItem(
+                      value: 'amount_asc',
+                      child: Text('Số tiền (Tăng dần)',
+                          style: TextStyle(fontSize: 12)),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _selectedSort = value;
+                      });
+                    }
+                  },
+                ),
               ),
             ),
           ),
@@ -67,7 +139,7 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
                     );
                   }
 
-                  final transactions = snapshot.data!;
+                  final transactions = _sortTransactions(snapshot.data!);
                   return ListView.builder(
                     itemCount: transactions.length,
                     itemBuilder: (context, index) {

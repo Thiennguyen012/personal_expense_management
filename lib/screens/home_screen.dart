@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../repositories/transaction_repository.dart';
 import '../repositories/category_repository.dart';
 import '../models/transaction.dart';
@@ -137,6 +138,10 @@ class HomeScreenState extends State<HomeScreen> {
                 _buildCalendarSection(),
                 const SizedBox(height: 24),
 
+                // Category Statistics (Pie Charts)
+                _buildCategoryStatistics(),
+                const SizedBox(height: 24),
+
                 // Latest Entries
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -254,82 +259,6 @@ class HomeScreenState extends State<HomeScreen> {
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Build transaction item
-  Widget _buildTransactionItem({
-    required String title,
-    required String category,
-    required double amount,
-    required String type,
-    required String icon,
-    required String date,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          // Icon Circle
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: Text(icon, style: const TextStyle(fontSize: 24)),
-            ),
-          ),
-          const SizedBox(width: 12),
-          // Content
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  date,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Amount
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${type == 'income' ? '+' : '- '}${AppUtils.formatCurrency(amount)}',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: type == 'income' ? Colors.green : Colors.red,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                category,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
           ),
         ],
       ),
@@ -490,6 +419,357 @@ class HomeScreenState extends State<HomeScreen> {
           ),
         );
       },
+    );
+  }
+
+  // Build transaction item
+  Widget _buildTransactionItem({
+    required String title,
+    required String category,
+    required double amount,
+    required String type,
+    required String icon,
+    required String date,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          // Icon Circle
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Text(icon, style: const TextStyle(fontSize: 24)),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Content
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  date,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Amount
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${type == 'income' ? '+' : '- '}${AppUtils.formatCurrency(amount)}',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: type == 'income' ? Colors.green : Colors.red,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                category,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Build Category Statistics with Pie Charts
+  Widget _buildCategoryStatistics() {
+    return FutureBuilder<List<TransactionModel>>(
+      key: ValueKey('$_refreshKey-stats'),
+      future: _transactionRepository.getAllTransactions(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final transactions = snapshot.data ?? [];
+
+        // Group by category and type
+        final incomeByCategory = <String, double>{};
+        final expenseByCategory = <String, double>{};
+
+        for (var tx in transactions) {
+          if (tx.type == 'income') {
+            incomeByCategory[tx.category] =
+                (incomeByCategory[tx.category] ?? 0) + tx.amount;
+          } else {
+            expenseByCategory[tx.category] =
+                (expenseByCategory[tx.category] ?? 0) + tx.amount;
+          }
+        }
+
+        if (incomeByCategory.isEmpty && expenseByCategory.isEmpty) {
+          return const SizedBox();
+        }
+
+        return Card(
+          elevation: 2,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Category statistics',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    // Income Pie Chart
+                    if (incomeByCategory.isNotEmpty)
+                      Expanded(
+                        child: Column(
+                          children: [
+                            const Text(
+                              'Thu Nhập',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              height: 220,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    flex: 1,
+                                    child: _buildPieChart(
+                                      data: incomeByCategory,
+                                      type: 'income',
+                                      radius: 60,
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 1,
+                                    child: _buildLegend(
+                                      data: incomeByCategory,
+                                      type: 'income',
+                                      compact: true,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(width: 16),
+                    // Expense Pie Chart
+                    if (expenseByCategory.isNotEmpty)
+                      Expanded(
+                        child: Column(
+                          children: [
+                            const Text(
+                              'Chi Tiêu',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              height: 220,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    flex: 1,
+                                    child: _buildPieChart(
+                                      data: expenseByCategory,
+                                      type: 'expense',
+                                      radius: 60,
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 1,
+                                    child: _buildLegend(
+                                      data: expenseByCategory,
+                                      type: 'expense',
+                                      compact: true,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Build Pie Chart
+  Widget _buildPieChart({
+    required Map<String, double> data,
+    required String type,
+    double radius = 80,
+  }) {
+    final sections = <PieChartSectionData>[];
+    final total = data.values.fold<double>(0, (sum, val) => sum + val);
+
+    int colorIndex = 0;
+    final colors = [
+      Colors.blue,
+      Colors.green,
+      Colors.orange,
+      Colors.red,
+      Colors.purple,
+      Colors.teal,
+      Colors.pink,
+      Colors.amber,
+    ];
+
+    data.forEach((category, amount) {
+      final percentage = (amount / total) * 100;
+      sections.add(
+        PieChartSectionData(
+          color: colors[colorIndex % colors.length],
+          value: amount,
+          title: '${percentage.toStringAsFixed(0)}%',
+          titleStyle: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 10,
+          ),
+          radius: radius,
+        ),
+      );
+      colorIndex++;
+    });
+
+    return PieChart(
+      PieChartData(
+        sections: sections,
+        centerSpaceRadius: radius * 0.5,
+        sectionsSpace: 2,
+      ),
+      swapAnimationDuration: const Duration(milliseconds: 750),
+    );
+  }
+
+  // Build Legend
+  Widget _buildLegend({
+    required Map<String, double> data,
+    required String type,
+    bool compact = false,
+  }) {
+    final total = data.values.fold<double>(0, (sum, val) => sum + val);
+    int colorIndex = 0;
+    final colors = [
+      Colors.blue,
+      Colors.green,
+      Colors.orange,
+      Colors.red,
+      Colors.purple,
+      Colors.teal,
+      Colors.pink,
+      Colors.amber,
+    ];
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: data.entries.map((entry) {
+          final category = entry.key;
+          final amount = entry.value;
+          final percentage = (amount / total) * 100;
+          final color = colors[colorIndex % colors.length];
+          colorIndex++;
+
+          return Padding(
+            padding: EdgeInsets.symmetric(vertical: compact ? 4.0 : 8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        category,
+                        style: TextStyle(
+                          fontSize: compact ? 11 : 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${percentage.toStringAsFixed(1)}%',
+                        style: TextStyle(
+                          fontSize: compact ? 10 : 11,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      Text(
+                        AppUtils.formatCurrency(amount),
+                        style: TextStyle(
+                          fontSize: compact ? 10 : 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 }

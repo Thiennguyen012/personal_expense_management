@@ -86,7 +86,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Thêm Giao Dịch'),
+        title: const Text('Add transaction'),
         backgroundColor: Colors.blue.shade700,
       ),
       body: SingleChildScrollView(
@@ -96,7 +96,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Type Selection
-              const Text('Loại Giao Dịch'),
+              const Text('Transaction type'),
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -105,12 +105,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       segments: const [
                         ButtonSegment(
                           value: 'income',
-                          label: Text('Thu Nhập'),
+                          label: Text('Income'),
                           icon: Icon(Icons.arrow_downward),
                         ),
                         ButtonSegment(
                           value: 'expense',
-                          label: Text('Chi Tiêu'),
+                          label: Text('Expense'),
                           icon: Icon(Icons.arrow_upward),
                         ),
                       ],
@@ -131,7 +131,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               TextField(
                 controller: _titleController,
                 decoration: InputDecoration(
-                  labelText: 'Tiêu Đề',
+                  labelText: 'Title',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -143,7 +143,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               TextField(
                 controller: _amountController,
                 decoration: InputDecoration(
-                  labelText: 'Số Tiền (VND)',
+                  labelText: 'Amount (VND)',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -154,7 +154,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               const SizedBox(height: 16),
 
               // Category
-              const Text('Danh Mục'),
+              const Text('Category'),
               const SizedBox(height: 8),
               DropdownButton<String>(
                 isExpanded: true,
@@ -174,7 +174,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               const SizedBox(height: 16),
 
               // Date
-              const Text('Ngày'),
+              const Text('Date'),
               const SizedBox(height: 8),
               InkWell(
                 onTap: () => _selectDate(context),
@@ -194,7 +194,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               TextField(
                 controller: _descriptionController,
                 decoration: InputDecoration(
-                  labelText: 'Ghi Chú (Tùy Chọn)',
+                  labelText: 'Notes (Optional)',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -216,7 +216,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     ),
                   ),
                   child: const Text(
-                    'Thêm Giao Dịch',
+                    'Add Transaction',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,

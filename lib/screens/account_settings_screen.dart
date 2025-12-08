@@ -44,7 +44,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   Future<void> _updateProfile() async {
     if (_nameController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tên không được để trống')),
+        const SnackBar(content: Text('Name cannot be empty')),
       );
       return;
     }
@@ -79,7 +79,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Cập nhật thông tin thành công'),
+            content: Text('Information updated successfully'),
             backgroundColor: Colors.green,
           ),
         );
@@ -89,7 +89,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi: $e'),
+            content: Text('Error: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -111,7 +111,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cài Đặt Tài Khoản'),
+        title: const Text('Account Settings'),
         backgroundColor: Colors.blue.shade700,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -158,7 +158,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           Text(
                             _nameController.text.isNotEmpty
                                 ? _nameController.text
-                                : 'Người Dùng',
+                                : 'User',
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -183,7 +183,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
               // Edit form
               const Text(
-                'Thông Tin Tài Khoản',
+                'Account Information',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -211,12 +211,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               TextField(
                 controller: _nameController,
                 decoration: InputDecoration(
-                  labelText: 'Tên Đầy Đủ',
+                  labelText: 'Full name',
                   prefixIcon: const Icon(Icons.person),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  hintText: 'Nhập tên của bạn',
+                  hintText: 'Enter your name',
                 ),
               ),
               const SizedBox(height: 24),
@@ -226,7 +226,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'Đổi Mật Khẩu',
+                    'Change password',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -248,17 +248,17 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   controller: _passwordController,
                   obscureText: true,
                   decoration: InputDecoration(
-                    labelText: 'Mật Khẩu Mới',
+                    labelText: 'New password',
                     prefixIcon: const Icon(Icons.lock),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    hintText: 'Nhập mật khẩu mới',
+                    hintText: 'Enter new password',
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Để trống nếu không muốn đổi mật khẩu',
+                  'Leave blank to keep current password',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey.shade600,
@@ -290,7 +290,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           ),
                         )
                       : const Text(
-                          'Lưu Thay Đổi',
+                          'Save changes',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

@@ -146,7 +146,7 @@ class _MonthlyDetailScreenState extends State<MonthlyDetailScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 const Text(
-                                  'Thu Nhập',
+                                  'Income',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 16,
@@ -204,7 +204,7 @@ class _MonthlyDetailScreenState extends State<MonthlyDetailScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 const Text(
-                                  'Chi Tiêu',
+                                  'Expense',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 16,
@@ -265,7 +265,7 @@ class _MonthlyDetailScreenState extends State<MonthlyDetailScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 const Text(
-                                  'Số Dư',
+                                  'Balance',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 16,
@@ -304,7 +304,7 @@ class _MonthlyDetailScreenState extends State<MonthlyDetailScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Giao Dịch (${transactions.length})',
+                              'Transaction (${transactions.length})',
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -339,7 +339,7 @@ class _MonthlyDetailScreenState extends State<MonthlyDetailScreen> {
                         Padding(
                           padding: const EdgeInsets.all(16.0),
                           child: Text(
-                            'Không có giao dịch nào trong tháng này',
+                            'No transaction on this month',
                             style: TextStyle(
                               color: Colors.grey[600],
                               fontSize: 16,

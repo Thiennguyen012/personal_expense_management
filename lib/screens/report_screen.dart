@@ -25,20 +25,6 @@ class _ReportScreenState extends State<ReportScreen> {
     setState(() {});
   }
 
-  Future<void> _selectMonth(BuildContext context) async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedMonth,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null) {
-      setState(() {
-        _selectedMonth = picked;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final startOfMonth = DateTime(_selectedMonth.year, _selectedMonth.month, 1);
@@ -60,27 +46,43 @@ class _ReportScreenState extends State<ReportScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Month Selection
-                InkWell(
-                  onTap: () => _selectMonth(context),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 12, horizontal: 16),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey),
-                      borderRadius: BorderRadius.circular(8),
+                // Month Navigation with Arrows
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_left),
+                      onPressed: () {
+                        setState(() {
+                          _selectedMonth = DateTime(
+                            _selectedMonth.year,
+                            _selectedMonth.month - 1,
+                          );
+                        });
+                      },
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          AppUtils.formatMonthYear(_selectedMonth),
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                        const Icon(Icons.calendar_today),
-                      ],
+                    Text(
+                      AppUtils.formatMonthYear(_selectedMonth),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
+                    IconButton(
+                      icon: const Icon(Icons.arrow_right),
+                      onPressed: _selectedMonth.month == DateTime.now().month &&
+                              _selectedMonth.year == DateTime.now().year
+                          ? null
+                          : () {
+                              setState(() {
+                                _selectedMonth = DateTime(
+                                  _selectedMonth.year,
+                                  _selectedMonth.month + 1,
+                                );
+                              });
+                            },
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 24),
                 // Monthly Summary
@@ -105,7 +107,7 @@ class _ReportScreenState extends State<ReportScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Số Dư Tháng',
+                              'Monthly Balance',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey,
@@ -114,7 +116,7 @@ class _ReportScreenState extends State<ReportScreen> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              '${balance.toStringAsFixed(0)} VND',
+                              AppUtils.formatCurrency(balance),
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
@@ -130,7 +132,7 @@ class _ReportScreenState extends State<ReportScreen> {
                 const SizedBox(height: 24),
                 // Transactions List
                 const Text(
-                  'Giao Dịch Trong Tháng',
+                  'Transaction this month',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -149,7 +151,7 @@ class _ReportScreenState extends State<ReportScreen> {
                     if (!snapshot.hasData || snapshot.data!.isEmpty) {
                       return const Padding(
                         padding: EdgeInsets.all(16.0),
-                        child: Text('Không có giao dịch trong tháng này'),
+                        child: Text('No transaction on this month!'),
                       );
                     }
 

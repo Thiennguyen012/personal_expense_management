@@ -91,10 +91,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   items: [
                     DropdownMenuItem(
                         value: 'income',
-                        child: const Text('Income (Thu nhập)')),
+                        child: const Text('Income')),
                     DropdownMenuItem(
                         value: 'expense',
-                        child: const Text('Expense (Chi tiêu)')),
+                        child: const Text('Expense')),
                   ],
                   onChanged: (value) {
                     setState(() {
