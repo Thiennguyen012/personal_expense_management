@@ -89,8 +89,34 @@ class DatabaseHelper {
       )
     ''');
 
+    // Thêm tài khoản test mặc định
+    await _insertDefaultUsers(db);
+
     // Thêm các category mặc định
     await _insertDefaultCategories(db);
+  }
+
+  Future<void> _insertDefaultUsers(Database db) async {
+    try {
+      await db.insert('users', {
+        'email': 'thien@gmail.com',
+        'password': '123123',
+        'name': 'Thien',
+        'createdAt': DateTime.now().toIso8601String(),
+      });
+
+      // Tạo default wallet cho user
+      await db.insert('wallets', {
+        'userId': 1,
+        'name': 'Ví chính',
+        'balance': 0,
+        'currency': 'VND',
+        'createdAt': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      // Nếu user hoặc wallet đã tồn tại, bỏ qua lỗi
+      print('Default users already exist: $e');
+    }
   }
 
   Future<void> _insertDefaultCategories(Database db) async {
