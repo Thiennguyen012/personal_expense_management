@@ -14,6 +14,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
   late TextEditingController _emailController;
   late TextEditingController _nameController;
+  late TextEditingController _oldPasswordController;
   late TextEditingController _passwordController;
 
   bool _isLoading = false;
@@ -25,6 +26,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     _emailController =
         TextEditingController(text: AuthService.currentUserEmail ?? '');
     _nameController = TextEditingController();
+    _oldPasswordController = TextEditingController();
     _passwordController = TextEditingController();
     _loadUserInfo();
   }
@@ -64,14 +66,36 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
       // If password is provided, update it
       if (_passwordController.text.isNotEmpty) {
+        // Verify old password first
+        final userId = AuthService.currentUserId;
+        final List<Map<String, dynamic>> result = await db.query(
+          'users',
+          where: 'id = ? AND password = ?',
+          whereArgs: [userId, _oldPasswordController.text],
+        );
+
+        if (result.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Old password is incorrect'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          setState(() => _isLoading = false);
+          return;
+        }
+
         await db.update(
           'users',
           {
             'password': _passwordController.text,
           },
           where: 'id = ?',
-          whereArgs: [AuthService.currentUserId],
+          whereArgs: [userId],
         );
+        _oldPasswordController.clear();
         _passwordController.clear();
       }
 
@@ -102,6 +126,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   void dispose() {
     _emailController.dispose();
     _nameController.dispose();
+    _oldPasswordController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -244,6 +269,19 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
               if (_showPasswordField) ...[
                 TextField(
+                  controller: _oldPasswordController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: 'Current password',
+                    prefixIcon: const Icon(Icons.lock),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    hintText: 'Enter current password',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
                   controller: _passwordController,
                   obscureText: true,
                   decoration: InputDecoration(
@@ -257,7 +295,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Leave blank to keep current password',
+                  'Enter your current password to confirm the change',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey.shade600,
